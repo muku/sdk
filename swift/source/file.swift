@@ -1,10 +1,12 @@
+import Foundation
+
 public class File
 {
-	private _inputStream: NSInputStream
+	private let _inputStream: NSInputStream
 
 	init(path: String)
 	{
-		_inputStream = NSInputStream(filatAtPath: path)
+		_inputStream = NSInputStream(fileAtPath: path)
 	}
 
 	private func close()
@@ -14,17 +16,17 @@ public class File
 
 	public func readOutputData() -> [Float]
 	{
-		return readFloatData(4)
+		return readFloatData(length: 4)
 	}
 
 	public func readSensorData() -> [Float]
 	{
-		return readFloatData(9)
+		return readFloatData(length: 9)
 	}
 
 	public func readRawData() -> [UInt16]
 	{
-		return readShortData(9)
+		return readShortData(length: 9)
 	}
 
 	public func readFloatData(length: Int) -> [Float]
@@ -33,7 +35,7 @@ public class File
 
 		if length > 0 && _inputStream.hasBytesAvailable
 		{
-			var buffer = [UInt8](count: length * 4, repeatedValue: 0)
+			var buffer = [UInt8](repeating: 0, count: length * 4)
 			let bytesRead = _inputStream.read(data: &buffer, maxLength: buffer.count) 
 
 			if bytesRead > 0
@@ -51,7 +53,7 @@ public class File
 
 		if length > 0 && _inputStream.hasBytesAvailable
 		{
-			var buffer = [UInt16](count: length * 2, repeatedValue: 0)
+			var buffer = [UInt16](repeating: 0, count: length * 2)
 			let bytesRead = _inputStream.read(data: &buffer, maxLength: buffer.count) 
 
 			if bytesRead > 0

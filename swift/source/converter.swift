@@ -1,3 +1,5 @@
+import Foundation
+
 public class Converter
 {
 	public class func ConvertToInt32(buffer: [UInt8]) -> Int32
@@ -45,9 +47,10 @@ public class Converter
 		return value
 	}
 
-	public class func AnyToByteArray<T> (var value: T) -> [UInt8]
+	public class func AnyToByteArray<T> (value: T) -> [UInt8]
 	{
-	    return withUnsafePointer(&value)
+		var val = value
+	    return withUnsafePointer(&val)
 	    {
 	        Array(UnsafeBufferPointer(start: UnsafePointer<UInt8>($0), count: sizeof(T)))
 	    }

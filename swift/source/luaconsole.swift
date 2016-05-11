@@ -15,9 +15,9 @@ public class LuaConsole
 	{
 		let resultType = ResultType()
 
-		if client.writeData(chunk, timeOutSecond)
+		if client.writeData(data: chunk, timeOutSecond: timeOutSecond)
 		{
-			let response = client.readData(timeOutSecond)
+			let response = client.readData(timeOutSecond: timeOutSecond)
 
 			if response.count > 0
 			{
@@ -30,7 +30,7 @@ public class LuaConsole
 
 				if response.count > 1
 				{
-					let resp [UInt8] = response[1..<response.count]
+					let resp: [UInt8] = response[1..<response.count]
 					resultType.second = String(data: resp, encoding: NSUTF8StringEncoding) 
 				}
 

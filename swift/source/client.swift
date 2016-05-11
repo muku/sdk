@@ -1,9 +1,12 @@
+import Foundation
+import CoreFoundation
+
 public class Client
 {
 
-  	private var _inputStream: NSInputStream = nil
+  	private var _inputStream: NSInputStream
 
-  	private var _outputStream: NSOutputStream = nil
+  	private var _outputStream: NSOutputStream
 
 	  /** Keep track of our own connection state that does supports timeouts. */
   	private var _connected: Bool = false
@@ -30,7 +33,7 @@ public class Client
 	    Default value, in seconds, for the socket receive time out
 	    in the Client#waitForData method. Zero denotes blocking receive.
 	  */
-  	private let _timeOutWaitForData: int = 5
+  	private let _timeOutWaitForData: Int = 5
 
 	  /**
 	    Set the address to this value if we get an empty string.
@@ -51,19 +54,22 @@ public class Client
 	//Constructor
 	init(host: String, port: Int)
 	{
+		var hostname = host
+		var portNumber = port
+
 		if host.isEmpty
 		{
-			host = _defaultAddress
+			hostname = _defaultAddress
 		}
 
 		if port < 0
 		{
-			port = 0
+			portNumber = 0
 		}
 
-		var nsHost: NSHost = NSHost(address: host)
+		var nsHost: NSHost = NSHost(address: hostname)
 
-		NSStream.getStreamsToHost(host, port: port, inputStream: &_inputStream, outputStream: &_outputStream)
+		NSStream.getStreamsToHost(hostname, port: portNumber, inputStream: &_inputStream, outputStream: &_outputStream)
 
 		_inputStream.open()
 		_outputStream.open()
@@ -73,7 +79,7 @@ public class Client
 
 		if message.count > 0
 		{
-			if !_description = String(data: data, encoding: NSUTF8StringEncoding) 
+			if !_description = String(data: message, encoding: NSUTF8StringEncoding) 
 			{
 			    print("not a valid UTF-8 sequence")
 			} 
@@ -111,7 +117,7 @@ public class Client
 
 			var message = receive()
 
-			if message.count >= _xmlMagic.count
+			if message.count >= _xmlMagic.characters.count
 			{
 				//Convert to string
 				let str = String(data: message, encoding: NSUTF8StringEncoding) 
@@ -134,7 +140,7 @@ public class Client
 	}
 
 	public func readData() -> [UInt8]{
-		return readData(-1)
+		return readData(timeOutSecond:-1)
 	}
 
 	public func waitForData(timeOutSecond: Int) -> Bool
@@ -154,7 +160,7 @@ public class Client
 
 			var message = receive()
 
-			if message.count >= _xmlMagic.count
+			if message.count >= _xmlMagic.characters.count
 			{
 				//Convert to string
 				let str = String(data: message, encoding: NSUTF8StringEncoding) 
@@ -171,7 +177,7 @@ public class Client
 	}
 
 	public func waitForData() -> Bool{
-		return waitForData(-1)
+		return waitForData(timeOutSecond: -1)
 	}
 
 	public func writeData(data: [UInt8], timeOutSecond: Int) -> Bool
@@ -189,12 +195,12 @@ public class Client
 				//timeOutSecond
 			}
 
-			if(data.count > 0 data.count < _maxMessageLength)
+			if(data.count > 0 && data.count < _maxMessageLength)
 			{
 				//length in network byte order
-				let length: UInt32 = CFSwapInt32HostToBig((UInt32)data.count)
+				let length: UInt32 = CFSwapInt32HostToBig(UInt32(data.count))
 
-				let header: [UInt8] = Converter.AnyToByteArray(length)
+				let header: [UInt8] = Converter.AnyToByteArray(value: length)
 				let writeData: [UInt8] = header + data
 
 				let bytesWritten = _outputStream.write(UnsafePointer<UInt8>(writeData), maxLength: writeData.count)
@@ -211,28 +217,33 @@ public class Client
 
 	public func writeData(data: [UInt8]) -> Bool
 	{
-		return writeData(data, -1)
+		return writeData(data: data, timeOutSecond: -1)
 	}
 
-	public func writeData(message: String, time_out_second: Int) -> Bool
+	public func writeData(message: String, timeOutSecond: Int) -> Bool
 	{
 		let data: [UInt8] = [UInt8](message.utf8)
-		writeData(data, time_out_second)
+		writeData(data: data, timeOutSecond: timeOutSecond)
 	}
 
 	public func writeData(message: String) -> Bool
 	{
-		return writeData(message, -1)
+		return writeData(message: message, timeOutSecond: -1)
 	}
 
-	public func getXMLString() -> String
+	public func GetXMLString() -> String
 	{
 		return _xmlString
 	}
 
-	public func getSocket() -> Stream
+	public func GetInputStream() -> NSInputStream
 	{
-		return _socket
+		return _inputStream
+	}
+
+	public func GetOutputStream() -> NSOutputStream
+	{
+		return _outputStream
 	}
 
 	private func receive() -> [UInt8]
@@ -242,10 +253,10 @@ public class Client
 		if isConnected()
 		{
 			//first read the length of the data
-			var lengthBuffer: [UInt8](count: 4)
+			var lengthBuffer = [UInt8](count: 4)
 			if _inputStream.hasBytesAvailable 
 			{
-    			let bytesRead :Int = _inputStream.read(&lengthBuffer, maxLength: 4)
+    			let bytesRead : Int = _inputStream.read(&lengthBuffer, maxLength: 4)
 
     			//Convert to int and read the actual data
     			if bytesRead > 0

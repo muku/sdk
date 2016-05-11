@@ -35,7 +35,7 @@ public class Element<T>
 
 public class ConfigurableElement: Element<Float>
 {
-	public let Length: Int = 0
+	public class let Length: Int = 0
 
 	init(data: [Float])
 	{
@@ -60,7 +60,7 @@ public class ConfigurableElement: Element<Float>
 
 public class PreviewElement: Element<Float>
 {
-	public let Length : Int = 4 * 2 + 3 * 2
+	public class let Length: Int = 4 * 2 + 3 * 2
 
 	init(data: [Float])
 	{
@@ -69,7 +69,7 @@ public class PreviewElement: Element<Float>
 
 	public func getEuler() -> [Float]
 	{
-		return getData(8, length: 3)
+		return getData(start: 8, length: 3)
 	}
 
 	public func getMatrix(local: Bool) -> [Float]
@@ -79,12 +79,12 @@ public class PreviewElement: Element<Float>
 
 	public func getQuaternion(local: Bool) -> [Float]
 	{
-		return local ? getData(4, length: 4) : getData(0, length: 4)
+		return local ? getData(start: 4, length: 4) : getData(start: 0, length: 4)
 	}
 
 	public func getAccelerate() -> [Float]
 	{
-		return getData(11, length: 3)
+		return getData(start: 11, length: 3)
 	}
 
 	private func quaternion_to_R3_rotation(q: [Float]) -> [Float]
@@ -113,7 +113,7 @@ public class PreviewElement: Element<Float>
         let norme_carre = aa + bb + cc + dd
 
         // Defaults to the identity matrix.
-        var result = [Float](count: 16, repeatedValue: 0)
+        var result = [Float](count: 16, repeatedValue: 0.0)
         
         for i in 0...4
         {
@@ -139,7 +139,7 @@ public class PreviewElement: Element<Float>
 
 public class SensorElement: Element<Float>
 {
-	public let Length = 3*3
+	public class let Length = 3*3
 
 	init(data: [Float])
 	{
@@ -148,23 +148,23 @@ public class SensorElement: Element<Float>
 
 	public func getAccelerometer() -> [Float]
 	{
-		return getData(0, length: 3)
+		return getData(start: 0, length: 3)
 	}
 
 	public func getGyroscope() -> [Float]
 	{
-		return getData(6, length: 3)
+		return getData(start: 6, length: 3)
 	}
 
 	public func getMagnetometer() -> [Float]
 	{
-		return getData(3, length: 3)
+		return getData(start: 3, length: 3)
 	}
 }
 
 public class RawElement: Element<UInt16>
 {
-	public let Length = 3*3
+	public class let Length = 3*3
 
 	init(data: [UInt16])
 	{
@@ -173,17 +173,17 @@ public class RawElement: Element<UInt16>
 
 	public func getAccelerometer() -> [UInt16]
 	{
-		return getData(0, length: 3)
+		return getData(start: 0, length: 3)
 	}
 
 	public func getGyroscope() -> [UInt16]
 	{
-		return getData(6, length: 3)
+		return getData(start: 6, length: 3)
 	}
 
 	public func getMagnetometer() -> [UInt16]
 	{
-		return getData(3, length: 3)
+		return getData(start: 3, length: 3)
 	}
 }
 
@@ -191,8 +191,8 @@ public class Format
 {
 	public class func Configurable(data: [UInt8]) -> [Int: ConfigurableElement]
 	{
-		let result = [Int: ConfigurableElement]()
-		let map = IdToFloatArray(data, ConfigurableElement.Length)
+		var result = [Int: ConfigurableElement]()
+		let map = IdToFloatArray(buffer: data, length: ConfigurableElement.Length)
 
 		if map.count > 0
 		{
@@ -203,7 +203,7 @@ public class Format
 
 			if map.count != result.count
 			{
-				result.clear()
+				result.removeAll()
 			}
 
 			if result.count <= 0
@@ -217,8 +217,8 @@ public class Format
 
 	public class func Preview(data: [UInt8]) -> [Int: PreviewElement]
 	{
-		let result = [Int: ConfigurableElement]()
-		let map = IdToFloatArray(data, PreviewElement.Length)
+		var result = [Int: ConfigurableElement]()
+		let map = IdToFloatArray(buffer: data, length: PreviewElement.Length)
 
 		if map.count > 0
 		{
@@ -229,7 +229,7 @@ public class Format
 
 			if map.count != result.count
 			{
-				result.clear()
+				result.removeAll()
 			}
 
 			if result.count <= 0
@@ -243,19 +243,19 @@ public class Format
 
 	public class func Sensor(data: [UInt8]) -> [Int: SensorElement]
 	{
-		let result = [Int: ConfigurableElement]()
-		let map = IdToFloatArray(data, SensorElement.Length)
+		var result = [Int: ConfigurableElement]()
+		let map = IdToFloatArray(buffer: data, length: SensorElement.Length)
 
 		if map.count > 0
 		{
 			for i in 0..<map.count
 			{
-				result[i] = SensorElement(map[i])
+				result[i] = SensorElement(data: map[i])
 			}
 
 			if map.count != result.count
 			{
-				result.clear()
+				result.removeAll()
 			}
 
 			if result.count <= 0
@@ -269,19 +269,19 @@ public class Format
 
 	public class func Raw(data: [UInt8]) -> [Int: RawElement]
 	{
-		let result = [Int: ConfigurableElement]()
-		let map = IdToShortArray(data, RawElement.Length)
+		var result = [Int: ConfigurableElement]()
+		let map = IdToShortArray(buffer: data, length: RawElement.Length)
 
 		if map.count > 0
 		{
 			for i in 0..<map.count
 			{
-				result[i] = RawElement(map[i])
+				result[i] = RawElement(data: map[i])
 			}
 
 			if map.count != result.count
 			{
-				result.clear()
+				result.removeAll()
 			}
 
 			if result.count <= 0
@@ -295,22 +295,22 @@ public class Format
 
 	private class func IdToFloatArray(buffer: [UInt8], length: Int) -> [Int: [Float]]
 	{
-		let result = [Int: [Float]]()
+		var result = [Int: [Float]]()
 
 		var itr = 0
 
 		while itr < buffer.count && buffer.count - itr > sizeof(Int32)
 		{
 			var bytes = buffer[itr..<itr+4]
-			let key = Converter.ConvertToInt32(bytes)
+			let key = Converter.ConvertToInt32(buffer: Array(bytes))
 			itr += 4
 
-			var elementLength = (Int32)length
+			var elementLength = Int32(length)
 
 			if elementLength > 0 && buffer.count - itr >= elementLength * sizeof(Int32)
 			{
 				bytes = buffer[itr..<itr+4]
-				elementLength = Converter.ConvertToInt32(bytes)
+				elementLength = Converter.ConvertToInt32(buffer: Array(bytes))
 				itr += 4
 			}
 
@@ -321,7 +321,7 @@ public class Format
 				for i in 0..<elementLength
 				{
 					bytes = buffer[itr..<itr+4]
-					value[i] = Converter.ConvertToSingle(bytes)
+					value[i] = Converter.ConvertToSingle(buffer: Array(bytes))
 					itr += 4
 				}
 
@@ -331,7 +331,7 @@ public class Format
 
 		if itr != buffer.count
 		{
-			result.clear()
+			result.removeAll()
 		}
 
 		if(result.count == 0)
@@ -344,7 +344,7 @@ public class Format
 
 	private class func IdToShortArray(buffer: [UInt8], length: Int) -> [Int: [Int16]]
 	{
-		let result = [Int: [Int16]]()
+		var result = [Int: [Int16]]()
 
 		//size of int32 + size of int16 * length
 		let elementSize = 4 + 2 * length
@@ -354,15 +354,15 @@ public class Format
 		while itr < buffer.count && elementSize <= buffer.count - itr
 		{
 			var bytes = buffer[itr..<itr+4]
-			let key = Converter.ConvertToInt32(bytes)
+			let key = Converter.ConvertToInt32(buffer: Array(bytes))
 			itr += 4
 
-			var value = [UInt16](count: length, repeatedValue: 0)
+			var value = [UInt16](repeating: 0, count: length)
 
 			for i in 0..<length
 			{
 				bytes = buffer[itr..<itr+2]
-				value[i] = Converter.ConvertToShort(bytes)
+				value[i] = Converter.ConvertToShort(buffer: Array(bytes))
 				itr += 2
 			}
 
@@ -371,7 +371,7 @@ public class Format
 
 		if itr != buffer.count
 		{
-			result.clear()
+			result.removeAll()
 		}
 
 		if(result.count == 0)
