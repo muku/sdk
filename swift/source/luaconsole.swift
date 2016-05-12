@@ -1,3 +1,5 @@
+import Foundation
+
 public enum ResultCode : Int
 {
 	case Success, Failure, Continue
@@ -15,7 +17,7 @@ public class LuaConsole
 	{
 		let resultType = ResultType()
 
-		if client.writeData(data: chunk, timeOutSecond: timeOutSecond)
+		if client.writeData(message: chunk, timeOutSecond: timeOutSecond)
 		{
 			let response = client.readData(timeOutSecond: timeOutSecond)
 
@@ -23,15 +25,15 @@ public class LuaConsole
 			{
 				let code = Int(response[0])
 
-				if code >= ResultCode.Success && code <= ResultCode.Continue
+				if code >= ResultCode.Success.rawValue && code <= ResultCode.Continue.rawValue
 				{
-					resultType.first = ResultCode(code)
+					resultType.first = ResultCode(rawValue: code)!
 				}
 
 				if response.count > 1
 				{
-					let resp: [UInt8] = response[1..<response.count]
-					resultType.second = String(data: resp, encoding: NSUTF8StringEncoding) 
+					let nsData = NSData(bytes: response, length: response.count)
+					resultType.second = String(data: nsData, encoding: NSUTF8StringEncoding)! 
 				}
 
 			}
@@ -42,6 +44,6 @@ public class LuaConsole
 
 	public class func SendChunk(client: Client, chunk: String) -> ResultType
 	{
-		SendChunk(client, chunk, -1)
+		return SendChunk(client: client, chunk: chunk, timeOutSecond: -1)
 	}
 }

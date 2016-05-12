@@ -12,7 +12,7 @@ public class Client
   	private var _connected: Bool = false
 
 	  /** String description of the remote service. */
-  	private var _description: String = ""
+  	private var _description: String? = nil
 
 	  /** Last XML message received. */
   	private var _xmlString: String = ""
@@ -75,11 +75,14 @@ public class Client
 		_outputStream.open()
 		_connected = true
 
-		var message = receive()
+		let message = receive()
 
 		if message.count > 0
 		{
-			if !_description = String(data: message, encoding: NSUTF8StringEncoding) 
+			let nsData = NSData(bytes: message, length: message.count)
+			_description = String(data: nsData, encoding: NSUTF8StringEncoding)
+
+			if _description == nil
 			{
 			    print("not a valid UTF-8 sequence")
 			} 
@@ -120,12 +123,13 @@ public class Client
 			if message.count >= _xmlMagic.characters.count
 			{
 				//Convert to string
-				let str = String(data: message, encoding: NSUTF8StringEncoding) 
+				let nsData = NSData(bytes: message, length: message.count)
+				let str = String(data: nsData, encoding: NSUTF8StringEncoding) 
 
 				//if it is an xml string starting with the magic value
-				if str.hasPrefix(_xmlMagic)
+				if str!.hasPrefix(_xmlMagic)
 				{
-					_xmlString = str
+					_xmlString = str!
 					message = receive()
 				}
 			}
@@ -158,15 +162,16 @@ public class Client
 				//timeOutSecond
 			}
 
-			var message = receive()
+			let message = receive()
 
 			if message.count >= _xmlMagic.characters.count
 			{
 				//Convert to string
-				let str = String(data: message, encoding: NSUTF8StringEncoding) 
+				let nsData = NSData(bytes: message, length: message.count)
+				let str = String(data: nsData, encoding: NSUTF8StringEncoding) 
 
 				//if it is an xml string starting with the magic value
-				if str.hasPrefix(_xmlMagic)
+				if str!.hasPrefix(_xmlMagic)
 				{
 					result = true
 				}
@@ -253,7 +258,7 @@ public class Client
 		if isConnected()
 		{
 			//first read the length of the data
-			var lengthBuffer = [UInt8](count: 4)
+			var lengthBuffer = [UInt8](repeating: 0, count: 4)
 			if _inputStream.hasBytesAvailable 
 			{
     			let bytesRead : Int = _inputStream.read(&lengthBuffer, maxLength: 4)
@@ -262,11 +267,11 @@ public class Client
     			if bytesRead > 0
     			{
     				//length will be big endian
-    				let messageLength = Converter.ConvertToInt32(lengthBuffer)
+    				let messageLength = Converter.ConvertToInt32(buffer: lengthBuffer)
 
-    				if _inputStream.hasBytesAvailable && messageLength > 0 && messageLength <= _maxMessageLength
+    				if _inputStream.hasBytesAvailable && messageLength > 0 && Int(messageLength) <= _maxMessageLength
 					{
-				    	_inputStream.read(&data, maxLength: messageLength)
+				    	_inputStream.read(&data, maxLength: Int(messageLength))
 				    }
     			}
 

@@ -35,11 +35,11 @@ public class Element<T>
 
 public class ConfigurableElement: Element<Float>
 {
-	public class let Length: Int = 0
+	public static let Length: Int = 0
 
 	init(data: [Float])
 	{
-		super.init(data: data, length: Length)
+		super.init(data: data, length: ConfigurableElement.Length)
 	}
 
 	public func value(index: Int) -> Float
@@ -54,17 +54,17 @@ public class ConfigurableElement: Element<Float>
 
 	public func getRange(start: Int, length: Int) -> [Float]
 	{
-		return getData(start, length: length)
+		return getData(start: start, length: length)
 	}
 }
 
 public class PreviewElement: Element<Float>
 {
-	public class let Length: Int = 4 * 2 + 3 * 2
+	public static let Length: Int = 4 * 2 + 3 * 2
 
 	init(data: [Float])
 	{
-		super.init(data: data, length: Length)
+		super.init(data: data, length: PreviewElement.Length)
 	}
 
 	public func getEuler() -> [Float]
@@ -139,11 +139,11 @@ public class PreviewElement: Element<Float>
 
 public class SensorElement: Element<Float>
 {
-	public class let Length = 3*3
+	public static let Length = 3*3
 
 	init(data: [Float])
 	{
-		super.init(data: data, length: Length)
+		super.init(data: data, length: SensorElement.Length)
 	}
 
 	public func getAccelerometer() -> [Float]
@@ -164,11 +164,11 @@ public class SensorElement: Element<Float>
 
 public class RawElement: Element<UInt16>
 {
-	public class let Length = 3*3
+	public static let Length = 3*3
 
 	init(data: [UInt16])
 	{
-		super.init(data: data, length: Length)
+		super.init(data: data, length: RawElement.Length)
 	}
 
 	public func getAccelerometer() -> [UInt16]

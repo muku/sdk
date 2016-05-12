@@ -2,63 +2,76 @@ import Foundation
 
 public class File
 {
-	private let _inputStream: NSInputStream
+	private let _inputStream: NSInputStream?
 
 	init(path: String)
 	{
 		_inputStream = NSInputStream(fileAtPath: path)
+
+		if _inputStream == nil
+		{
+			//throw
+		}
 	}
 
-	private func close()
+	private func Close()
 	{
-		_inputStream.close()
+		_inputStream!.close()
 	}
 
-	public func readOutputData() -> [Float]
+	public func ReadOutputData() -> [Float]
 	{
-		return readFloatData(length: 4)
+		return ReadFloatData(length: 4)
 	}
 
-	public func readSensorData() -> [Float]
+	public func ReadSensorData() -> [Float]
 	{
-		return readFloatData(length: 9)
+		return ReadFloatData(length: 9)
 	}
 
-	public func readRawData() -> [UInt16]
+	public func ReadRawData() -> [Int16]
 	{
-		return readShortData(length: 9)
+		return ReadShortData(length: 9)
 	}
 
-	public func readFloatData(length: Int) -> [Float]
+	public func ReadFloatData(length: Int) -> [Float]
 	{
-		var result = [Float]()
+		var result = [Float](repeating: 0.0, count: length)
 
-		if length > 0 && _inputStream.hasBytesAvailable
+		if length > 0 && _inputStream!.hasBytesAvailable
 		{
 			var buffer = [UInt8](repeating: 0, count: length * 4)
-			let bytesRead = _inputStream.read(data: &buffer, maxLength: buffer.count) 
+			let bytesRead = _inputStream!.read(&buffer, maxLength: buffer.count) 
 
 			if bytesRead > 0
 			{
-				result = buffer
+				for i in 0 ..< length
+				{
+					let floatBytes = buffer[i*4..<i*4+4]
+					result[i] = Converter.ConvertToSingle(buffer: Array(floatBytes))
+				}
 			}
 		}
 
 		return result
 	}
 
-	public func readShortData(length: Int) -> [UInt16]
+	public func ReadShortData(length: Int) -> [Int16]
 	{
-		var result = [UInt16]()
+		var result = [Int16](repeating: 0, count: length)
 
-		if length > 0 && _inputStream.hasBytesAvailable
+		if length > 0 && _inputStream!.hasBytesAvailable
 		{
-			var buffer = [UInt16](repeating: 0, count: length * 2)
-			let bytesRead = _inputStream.read(data: &buffer, maxLength: buffer.count) 
+			var buffer = [UInt8](repeating: 0, count: length * 2)
+			let bytesRead = _inputStream!.read(&buffer, maxLength: buffer.count) 
 
 			if bytesRead > 0
 			{
-				result = buffer
+				for i in 0 ..< length
+				{
+					let shortBytes = buffer[i*2..<i*2+2]
+					result[i] = Converter.ConvertToShort(buffer: Array(shortBytes))
+				}
 			}
 		}
 
