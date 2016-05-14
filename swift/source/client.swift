@@ -67,9 +67,12 @@ public class Client
 			portNumber = 0
 		}
 
-		var nsHost: NSHost = NSHost(address: hostname)
+		var readStream:  Unmanaged<CFReadStream>?
+        var writeStream: Unmanaged<CFWriteStream>?
+        CFStreamCreatePairWithSocketToHost(nil, hostname as NSString, port, &readStream, &writeStream)
 
-		NSStream.getStreamsToHost(hostname, port: portNumber, inputStream: &_inputStream, outputStream: &_outputStream)
+        _inputStream = readStream!.takeRetainedValue()
+        _outputStream = writeStream!.takeRetainedValue()
 
 		_inputStream.open()
 		_outputStream.open()
@@ -87,6 +90,11 @@ public class Client
 			    print("not a valid UTF-8 sequence")
 			} 
 		}
+	}
+
+	private func CreateStreams(hostname: String, port: Int)
+	{
+        
 	}
 
 	public func close()
