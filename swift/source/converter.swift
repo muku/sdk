@@ -37,12 +37,11 @@ public class Converter
 			//TODO throw exception
 		}
 
-		var value : Float = 0.0
-		let data = NSData(bytes: buffer, length: 4)
-		data.getBytes(&value, length: 4)
-		value = Float(bigEndian: value)
-
-		return value
+		let dataPtr = UnsafePointer<UInt8>(buffer)
+		let byteOffset = 3
+		let bits = UnsafePointer<Float._BitsType>(dataPtr + byteOffset)[0].bigEndian
+		let f = Float._fromBitPattern(bits)
+		return f
 	}
 
 	public class func ConvertToShort(buffer: [UInt8]) -> Int16
