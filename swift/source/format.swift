@@ -20,7 +20,7 @@ public class Element<T>
 			for i in start...start+length
 			{
 				result[count] = _data![i]
-				count++
+				count += 1
 			}
 		}
 
@@ -74,7 +74,7 @@ public class PreviewElement: Element<Float>
 
 	public func getMatrix(local: Bool) -> [Float]
 	{
-		return quaternion_to_R3_rotation(getQuaternion(local))
+		return quaternion_to_R3_rotation(q: getQuaternion(local: local))
 	}
 
 	public func getQuaternion(local: Bool) -> [Float]
@@ -113,7 +113,7 @@ public class PreviewElement: Element<Float>
         let norme_carre = aa + bb + cc + dd
 
         // Defaults to the identity matrix.
-        var result = [Float](count: 16, repeatedValue: 0.0)
+        var result = [Float](repeating: 0.0, count: 16)
         
         for i in 0...4
         {
@@ -162,26 +162,26 @@ public class SensorElement: Element<Float>
 	}
 }
 
-public class RawElement: Element<UInt16>
+public class RawElement: Element<Int16>
 {
 	public static let Length = 3*3
 
-	init(data: [UInt16])
+	init(data: [Int16])
 	{
 		super.init(data: data, length: RawElement.Length)
 	}
 
-	public func getAccelerometer() -> [UInt16]
+	public func getAccelerometer() -> [Int16]
 	{
 		return getData(start: 0, length: 3)
 	}
 
-	public func getGyroscope() -> [UInt16]
+	public func getGyroscope() -> [Int16]
 	{
 		return getData(start: 6, length: 3)
 	}
 
-	public func getMagnetometer() -> [UInt16]
+	public func getMagnetometer() -> [Int16]
 	{
 		return getData(start: 3, length: 3)
 	}
@@ -198,7 +198,7 @@ public class Format
 		{
 			for i in 0..<map.count
 			{
-				result[i] = ConfigurableElement(map[i])
+				result[i] = ConfigurableElement(data: map[i]!)
 			}
 
 			if map.count != result.count
@@ -217,14 +217,14 @@ public class Format
 
 	public class func Preview(data: [UInt8]) -> [Int: PreviewElement]
 	{
-		var result = [Int: ConfigurableElement]()
+		var result = [Int: PreviewElement]()
 		let map = IdToFloatArray(buffer: data, length: PreviewElement.Length)
 
 		if map.count > 0
 		{
 			for i in 0..<map.count
 			{
-				result[i] = PreviewElement(map[i])
+				result[i] = PreviewElement(data: map[i]!)
 			}
 
 			if map.count != result.count
@@ -243,14 +243,14 @@ public class Format
 
 	public class func Sensor(data: [UInt8]) -> [Int: SensorElement]
 	{
-		var result = [Int: ConfigurableElement]()
+		var result = [Int: SensorElement]()
 		let map = IdToFloatArray(buffer: data, length: SensorElement.Length)
 
 		if map.count > 0
 		{
 			for i in 0..<map.count
 			{
-				result[i] = SensorElement(data: map[i])
+				result[i] = SensorElement(data: map[i]!)
 			}
 
 			if map.count != result.count
@@ -269,14 +269,14 @@ public class Format
 
 	public class func Raw(data: [UInt8]) -> [Int: RawElement]
 	{
-		var result = [Int: ConfigurableElement]()
+		var result = [Int: RawElement]()
 		let map = IdToShortArray(buffer: data, length: RawElement.Length)
 
 		if map.count > 0
 		{
 			for i in 0..<map.count
 			{
-				result[i] = RawElement(data: map[i])
+				result[i] = RawElement(data: map[i]!)
 			}
 
 			if map.count != result.count
@@ -299,24 +299,25 @@ public class Format
 
 		var itr = 0
 
-		while itr < buffer.count && buffer.count - itr > sizeof(Int32)
+		while itr < buffer.count && buffer.count - itr >= 4
 		{
 			var bytes = buffer[itr..<itr+4]
 			let key = Converter.ConvertToInt32(buffer: Array(bytes))
 			itr += 4
 
-			var elementLength = Int32(length)
+			var elementLength = length
 
-			if elementLength > 0 && buffer.count - itr >= elementLength * sizeof(Int32)
+			if elementLength == 0 && buffer.count - itr >= 4
 			{
 				bytes = buffer[itr..<itr+4]
-				elementLength = Converter.ConvertToInt32(buffer: Array(bytes))
+				let elementLength32 = Converter.ConvertToInt32(buffer: Array(bytes))
+				elementLength = Int(elementLength32)
 				itr += 4
 			}
 
-			if elementLength > 0 && buffer.count - itr >= elementLength * sizeof(Float)
+			if elementLength > 0 && buffer.count - itr >= elementLength * 4
 			{
-				let value = [Float](count: elementLength, repeatedValue: 0)
+				var value = [Float](repeating: 0.0, count: elementLength)
 
 				for i in 0..<elementLength
 				{
@@ -325,7 +326,7 @@ public class Format
 					itr += 4
 				}
 
-				result[key] = value
+				result.updateValue(value, forKey: Int(key))
 			}
 		}
 
@@ -357,7 +358,7 @@ public class Format
 			let key = Converter.ConvertToInt32(buffer: Array(bytes))
 			itr += 4
 
-			var value = [UInt16](repeating: 0, count: length)
+			var value = [Int16](repeating: 0, count: length)
 
 			for i in 0..<length
 			{
@@ -366,7 +367,7 @@ public class Format
 				itr += 2
 			}
 
-			result[key] = value
+			result.updateValue(value, forKey: Int(key))
 		}
 
 		if itr != buffer.count

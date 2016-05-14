@@ -17,6 +17,19 @@ public class Converter
 		return value
 	}
 
+	public class func ConvertToInt(buffer: [UInt8]) -> Int
+	{
+		if buffer.count != 4 || buffer.count != 8
+		{
+			//throw
+		}
+
+		var value = 0
+		let data = NSData(bytes: buffer, length: buffer.count)
+		data.getBytes(&value, length: buffer.count)
+		return Int(bigEndian: value)
+	}
+
 	public class func ConvertToSingle(buffer: [UInt8]) -> Float
 	{
 		if buffer.count != 4
